@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuFlow - Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to DocuFlow</h1>
+
+    <!-- New Input Form -->
+    <div>
+        <input type="text" id="doc-title" placeholder="Enter document title...">
+        <button onclick="createDocument()">Create Document</button>
+    </div>
+
+    <h3>Your Documents:</h3>
+    <ul id="document-list"></ul>
+
+    <script>
+        // Function to fetch and display all documents
+        function loadDocuments() {
+            fetch('/api/documents')
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById('document-list');
+                    list.innerHTML = ""; // Clear the list first so we don't duplicate items
+                    data.forEach(doc => {
+                        const li = document.createElement('li');
+                        li.textContent = doc.title;
+                        list.appendChild(li);
+                    });
+                })
+                .catch(err => console.error("Error fetching documents:", err));
+        }
+
+        // Function to send a new document title to the backend
+        function createDocument() {
+            const titleInput = document.getElementById('doc-title');
+            const titleText = titleInput.value.trim();
+
+            if (!titleText) return alert("Please enter a title!");
+
+            // Send a POST request to the backend with the new title
+            fetch('/api/documents', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: titleText })
+            })
+            .then(response => response.json())
+            .then(newDoc => {
+                titleInput.value = ""; // Clear the input box
+                loadDocuments();      // Refresh our list to show the new document
+            })
+            .catch(err => console.error("Error creating document:", err));
+        }
+
+        // Load existing documents when the page first opens
+        loadDocuments();
+    </script>
+</body>
+</html>
