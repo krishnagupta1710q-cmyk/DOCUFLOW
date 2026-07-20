@@ -3,61 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuFlow - Dashboard</title>
+    <title>DocuFlow - Editor</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; display: flex; gap: 40px; }
+        #sidebar { width: 30%; border-right: 1px solid #ccc; padding-right: 20px; }
+        #editor-container { width: 65%; display: none; }
+        textarea { width: 100%; height: 300px; margin-top: 10px; padding: 10px; }
+        li { cursor: pointer; color: blue; text-decoration: underline; margin-bottom: 8px; }
+        button { margin-top: 10px; padding: 8px 12px; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <h1>Welcome to DocuFlow</h1>
 
-    <!-- New Input Form -->
-    <div>
-        <input type="text" id="doc-title" placeholder="Enter document title...">
-        <button onclick="createDocument()">Create Document</button>
+    <!-- SIDEBAR: Dashboard List -->
+    <div id="sidebar">
+        <h1>DocuFlow</h1>
+        <div>
+            <input type="text" id="doc-title" placeholder="New document title...">
+            <button onclick="createDocument()">Create</button>
+        </div>
+        <h3>Your Documents:</h3>
+        <ul id="document-list"></ul>
     </div>
 
-    <h3>Your Documents:</h3>
-    <ul id="document-list"></ul>
+    <!-- MAIN AREA: The Text Editor -->
+    <div id="editor-container">
+        <h2 id="active-title">Select a document</h2>
+        <textarea id="editor-body" placeholder="Start typing your content here..."></textarea>
+        <br>
+        <button onclick="saveDocument()">Save Content</button>
+    </div>
 
     <script>
-        // Function to fetch and display all documents
+        let currentDocId = null;
+
         function loadDocuments() {
             fetch('/api/documents')
                 .then(response => response.json())
                 .then(data => {
                     const list = document.getElementById('document-list');
-                    list.innerHTML = ""; // Clear the list first so we don't duplicate items
+                    list.innerHTML = "";
                     data.forEach(doc => {
                         const li = document.createElement('li');
                         li.textContent = doc.title;
+                        // When clicked, open this specific document in the editor
+                        li.onclick = () => openEditor(doc.id, doc.title, doc.content);
                         list.appendChild(li);
                     });
                 })
-                .catch(err => console.error("Error fetching documents:", err));
+                .catch(err => console.error(err));
         }
 
-        // Function to send a new document title to the backend
         function createDocument() {
             const titleInput = document.getElementById('doc-title');
             const titleText = titleInput.value.trim();
-
             if (!titleText) return alert("Please enter a title!");
 
-            // Send a POST request to the backend with the new title
             fetch('/api/documents', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title: titleText })
             })
             .then(response => response.json())
-            .then(newDoc => {
-                titleInput.value = ""; // Clear the input box
-                loadDocuments();      // Refresh our list to show the new document
-            })
-            .catch(err => console.error("Error creating document:", err));
+            .then(() => {
+                titleInput.value = "";
+                loadDocuments();
+            });
         }
 
-        // Load existing documents when the page first opens
+        // Open the editor view with the selected document's data
+        function openEditor(id, title, content) {
+            currentDocId = id;
+            document.getElementById('active-title').textContent = title;
+            document.getElementById('editor-body').value = content || "";
+            document.getElementById('editor-container').style.display = "block";
+        }
+
+        // Send the updated textarea content to the backend
+        function saveDocument() {
+            if (!currentDocId) return;
+            const contentText = document.getElementById('editor-body').value;
+
+            fetch(`/api/documents/${currentDocId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: contentText })
+            })
+            .then(response => response.json())
+            .then(updatedDoc => {
+                alert("Document saved successfully!");
+                // Refresh data array in background to update the active content states
+                loadDocuments(); 
+            })
+            .catch(err => console.error(err));
+        }
+
         loadDocuments();
     </script>
 </body>

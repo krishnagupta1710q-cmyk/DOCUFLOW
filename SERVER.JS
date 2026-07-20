@@ -5,37 +5,45 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Serve our HTML file when we visit the website
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Our temporary array acting as a database
 let documents = [
     { id: 1, title: "My First Note", content: "Welcome to DocuFlow!" }
 ];
 
-// ROUTE 1: Get all documents (Read)
+// ROUTE 1: Read all documents
 app.get('/api/documents', (req, res) => {
     res.json(documents);
 });
 
-// ROUTE 2: Create a new document (Create)
+// ROUTE 2: Create a new document
 app.post('/api/documents', (req, res) => {
     const { title } = req.body;
-    
-    // Create a new document object
     const newDocument = {
         id: documents.length + 1,
         title: title,
-        content: "" // Starts empty
+        content: "" 
     };
-
-    // Push it into our data array
     documents.push(newDocument);
-
-    // Send the newly created document back as a confirmation
     res.status(201).json(newDocument);
+});
+
+// ROUTE 3: Update an existing document's content (Update)
+app.put('/api/documents/:id', (req, res) => {
+    const docId = parseInt(req.params.id);
+    const { content } = req.body;
+
+    // Find the document in our array that matches the ID
+    const document = documents.find(d => d.id === docId);
+
+    if (document) {
+        document.content = content; // Update its content text
+        res.json(document);
+    } else {
+        res.status(404).json({ error: "Document not found" });
+    }
 });
 
 app.listen(PORT, () => {
