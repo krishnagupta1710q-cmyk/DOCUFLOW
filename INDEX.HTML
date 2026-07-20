@@ -49,14 +49,26 @@
             background-color: #ffffff; flex-direction: column; gap: 16px;
         }
         #active-title { font-size: 28px; font-weight: 600; color: #212529; border-bottom: 2px solid #f1f3f4; padding-bottom: 12px; }
-        textarea { 
-            width: 100%; flex-grow: 1; height: 60vh; max-height: 70vh; padding: 20px; 
-            border: 1px solid #e9ecef; border-radius: 8px; font-size: 16px; line-height: 1.6;
-            color: #495057; background-color: #f8f9fa; resize: none; outline: none; transition: border 0.2s;
-        }
-        textarea:focus { border-color: #1a73e8; background-color: #ffffff; }
         
-        /* Action buttons container alignment */
+        /* NEW: Rich Text Formatting Toolbar Styling */
+        .toolbar { 
+            display: flex; gap: 6px; background-color: #f1f3f4; 
+            padding: 8px; border-radius: 6px; border: 1px solid #e9ecef;
+        }
+        .toolbar-btn { 
+            background: none; color: #495057; padding: 6px 12px; 
+            font-size: 14px; border-radius: 4px; transition: background 0.2s;
+        }
+        .toolbar-btn:hover { background-color: #e8eaed; color: #1a73e8; }
+
+        /* NEW: Content Editable Canvas styling instead of textarea */
+        #editor-body { 
+            width: 100%; flex-grow: 1; height: 55vh; max-height: 65vh; padding: 20px; 
+            border: 1px solid #e9ecef; border-radius: 8px; font-size: 16px; line-height: 1.6;
+            color: #495057; background-color: #f8f9fa; overflow-y: auto; outline: none; transition: border 0.2s;
+        }
+        #editor-body:focus { border-color: #1a73e8; background-color: #ffffff; }
+        
         .action-group { display: flex; gap: 12px; }
         .download-btn { background-color: #34a853; }
         .download-btn:hover { background-color: #2d8e47; }
@@ -87,20 +99,36 @@
         <p>Select a file from the sidebar or make a new one to begin typing.</p>
     </div>
 
-    <!-- ACTIVE TEXT EDITOR -->
+    <!-- ACTIVE RICH TEXT EDITOR -->
     <div id="editor-container">
         <h2 id="active-title">Select a document</h2>
-        <textarea id="editor-body" placeholder="Start your brainstorming or documentation here..."></textarea>
+        
+        <!-- NEW: Formatting Toolbar Block -->
+        <div class="toolbar">
+            <button class="toolbar-btn" onclick="formatText('bold')"><b>B</b></button>
+            <button class="toolbar-btn" onclick="formatText('italic')"><i>I</i></button>
+            <button class="toolbar-btn" onclick="formatText('underline')"><u>U</u></button>
+            <button class="toolbar-btn" onclick="formatText('formatBlock', 'h3')">Heading</button>
+            <button class="toolbar-btn" onclick="formatText('insertUnorderedList')">• Bullet List</button>
+        </div>
+
+        <!-- NEW: Content Editable Canvas Container -->
+        <div id="editor-body" contenteditable="true" placeholder="Start typing your formatting here..."></div>
         
         <div class="action-group">
-            <button onclick="saveDocument()">Save Layout Content</button>
-            <!-- NEW: Download Button -->
+            <button onclick="saveDocument()">Save Content Layout</button>
             <button class="download-btn" onclick="downloadDocument()">📥 Download File</button>
         </div>
     </div>
 
     <script>
         let currentDocId = null;
+
+        // NEW: Handles rich text command mapping safely natively via the web engine
+        function formatText(command, value = null) {
+            document.execCommand(command, false, value);
+            document.getElementById('editor-body').focus(); // keeps insertion cursor active
+        }
 
         function loadDocuments() {
             fetch('/api/documents')
@@ -154,22 +182,24 @@
             currentDocId = id;
             document.getElementById('empty-state').style.display = "none";
             document.getElementById('active-title').textContent = title;
-            document.getElementById('editor-body').value = content || "";
+            // 🛠️ Updated to use innerHTML instead of .value to render styled rich text elements properly
+            document.getElementById('editor-body').innerHTML = content || "";
             document.getElementById('editor-container').style.display = "flex";
         }
 
         function saveDocument() {
             if (!currentDocId) return;
-            const contentText = document.getElementById('editor-body').value;
+            // 🛠️ Updated to save innerHTML data structures safely into MongoDB rows
+            const contentHTML = document.getElementById('editor-body').innerHTML;
 
             fetch(`/api/documents/${currentDocId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: contentText })
+                body: JSON.stringify({ content: contentHTML })
             })
             .then(response => response.json())
             .then(() => {
-                alert("Changes saved to cloud successfully!");
+                alert("Rich text workspace saved safely!");
                 loadDocuments(); 
             })
             .catch(err => console.error(err));
@@ -193,19 +223,16 @@
             .catch(err => console.error(err));
         }
 
-        // NEW: Handles client-side file compiling and auto-download execution
         function downloadDocument() {
             const title = document.getElementById('active-title').textContent;
-            const content = document.getElementById('editor-body').value;
+            // Captures readable raw layout text structural content context cleanly for formatting files
+            const content = document.getElementById('editor-body').innerText;
             
-            // Turn plain text data into a Blob stream
             const blob = new Blob([content], { type: 'text/markdown;charset=utf-8;' });
-            
-            // Create a ghost link to automatically force a click download action
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
-            link.setAttribute("download", `${title.replace(/\s+/g, '_')}.md`); // Saves as a dynamic markdown (.md) document!
+            link.setAttribute("download", `${title.replace(/\s+/g, '_')}.md`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
