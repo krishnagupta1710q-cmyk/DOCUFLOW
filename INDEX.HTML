@@ -1,71 +1,119 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocuFlow - Secure Workspace</title>
+    <title>DocuFlow - Advanced Workspace</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { display: flex; height: 100vh; background-color: #f8f9fa; color: #333; overflow: hidden; }
+        /* Modern Design System Tokens */
+        :root[data-theme="light"] {
+            --bg-main: #f8f9fa;
+            --bg-surface: #ffffff;
+            --bg-element: #f1f3f4;
+            --bg-hover: #edf2fa;
+            --border-color: #e9ecef;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --text-muted: #adb5bd;
+            --accent: #1a73e8;
+            --accent-hover: #1557b0;
+            --shadow: rgba(0, 0, 0, 0.05);
+        }
+
+        :root[data-theme="dark"] {
+            --bg-main: #121212;
+            --bg-surface: #1e1e1e;
+            --bg-element: #2d2d2d;
+            --bg-hover: #333333;
+            --border-color: #383838;
+            --text-primary: #e8eaed;
+            --text-secondary: #9aa0a6;
+            --text-muted: #70757a;
+            --accent: #8ab4f8;
+            --accent-hover: #aecbfa;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, border-color 0.3s, color 0.3s; }
+        body { display: flex; height: 100vh; background-color: var(--bg-main); color: var(--text-primary); overflow: hidden; }
         
-        /* Auth Overlay Form Panel */
+        /* Auth Overlay Screen */
         #auth-overlay {
-            position: fixed; top:0; left:0; width:100vw; height:100vh; background:#edf2fa;
+            position: fixed; top:0; left:0; width:100vw; height:100vh; background: var(--bg-main);
             display: flex; justify-content: center; align-items: center; z-index: 999;
         }
-        .auth-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 360px; }
-        .auth-card h2 { font-size: 24px; margin-bottom: 20px; color: #1a73e8; font-weight: 700; text-align: center; }
-        .auth-card input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; margin-bottom: 14px; outline: none; }
+        .auth-card { background: var(--bg-surface); padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px var(--shadow); width: 360px; border: 1px solid var(--border-color); }
+        .auth-card h2 { font-size: 24px; margin-bottom: 20px; color: var(--accent); font-weight: 700; text-align: center; }
+        .auth-card input { width: 100%; padding: 12px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-primary); border-radius: 6px; margin-bottom: 14px; outline: none; }
+        .auth-card input:focus { border-color: var(--accent); }
         .auth-card button { width: 100%; margin-top: 5px; }
-        .auth-toggle { text-align: center; font-size: 13px; margin-top: 16px; color: #5f6368; cursor: pointer; }
-        .auth-toggle:hover { text-decoration: underline; color: #1a73e8; }
+        .auth-toggle { text-align: center; font-size: 13px; margin-top: 16px; color: var(--text-secondary); cursor: pointer; }
+        .auth-toggle:hover { text-decoration: underline; color: var(--accent); }
 
-        /* Workspace Grid Layout */
+        /* Sidebar Architecture */
         #sidebar { 
-            width: 320px; background-color: #ffffff; border-right: 1px solid #e9ecef; 
+            width: 320px; background-color: var(--bg-surface); border-right: 1px solid var(--border-color); 
             display: flex; flex-direction: column; padding: 24px;
         }
         .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        h1 { font-size: 24px; font-weight: 700; color: #1a73e8; letter-spacing: -0.5px; }
+        h1 { font-size: 24px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+        .nav-controls { display: flex; gap: 12px; align-items: center; }
+        .theme-toggle-btn { background: none; border: none; font-size: 18px; cursor: pointer; color: var(--text-secondary); }
         .logout-link { font-size: 13px; color: #dc3545; cursor: pointer; text-decoration: underline; }
         
-        h3 { font-size: 12px; text-transform: uppercase; color: #adb5bd; margin-bottom: 12px; margin-top: 24px; }
+        h3 { font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px; margin-top: 24px; }
         .input-group { display: flex; gap: 8px; margin-bottom: 10px; }
-        input[type="text"] { flex-grow: 1; padding: 10px 14px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px; outline: none; }
-        input[type="text"]:focus { border-color: #1a73e8; }
+        input[type="text"] { flex-grow: 1; padding: 10px 14px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-primary); border-radius: 6px; font-size: 14px; outline: none; }
+        input[type="text"]:focus { border-color: var(--accent); }
         
-        button { padding: 10px 16px; background-color: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
-        button:hover { background-color: #1557b0; }
+        button { padding: 10px 16px; background-color: var(--accent); color: var(--bg-surface); border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        button:hover { background-color: var(--accent-hover); }
 
         #document-list { list-style: none; overflow-y: auto; flex-grow: 1; margin-top: 10px; }
-        .doc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; margin-bottom: 6px; border-radius: 6px; background-color: #f8f9fa; }
-        .doc-item:hover { background-color: #edf2fa; }
-        .doc-link { cursor: pointer; color: #495057; font-weight: 500; flex-grow: 1; font-size: 14px; }
+        .doc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; margin-bottom: 6px; border-radius: 6px; background-color: var(--bg-main); }
+        .doc-item:hover { background-color: var(--bg-hover); }
+        .doc-link { cursor: pointer; color: var(--text-secondary); font-weight: 500; flex-grow: 1; font-size: 14px; }
+        .doc-item:hover .doc-link { color: var(--accent); }
         .delete-btn { background: none; border: none; color: #dc3545; cursor: pointer; font-size: 14px; padding: 4px; }
 
-        #editor-container { flex-grow: 1; display: none; padding: 40px; background-color: #ffffff; flex-direction: column; gap: 16px; }
-        #active-title { font-size: 28px; font-weight: 600; color: #212529; border-bottom: 2px solid #f1f3f4; padding-bottom: 12px; }
+        /* Workspace & Canvas Layout */
+        #editor-container { flex-grow: 1; display: none; padding: 40px; background-color: var(--bg-surface); flex-direction: column; gap: 16px; }
         
-        .toolbar { display: flex; gap: 6px; background-color: #f1f3f4; padding: 8px; border-radius: 6px; border: 1px solid #e9ecef; }
-        .toolbar-btn { background: none; color: #495057; padding: 6px 12px; font-size: 14px; border-radius: 4px; width: auto; }
-        .toolbar-btn:hover { background-color: #e8eaed; color: #1a73e8; }
+        .editor-header-wrapper { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; }
+        #active-title { font-size: 28px; font-weight: 600; color: var(--text-primary); }
+        
+        /* ADVANCED FEATURE: Auto-Save Status Metric Indicator */
+        #save-status { font-size: 13px; color: var(--text-secondary); font-style: italic; display: flex; align-items: center; gap: 6px; }
+        .dot { height: 8px; width: 8px; background-color: var(--text-muted); border-radius: 50%; display: inline-block; }
+        .dot.saved { background-color: #34a853; }
+        .dot.saving { background-color: #fbbc05; animation: pulse 1s infinite alternate; }
 
-        #editor-body { width: 100%; flex-grow: 1; height: 55vh; padding: 20px; border: 1px solid #e9ecef; border-radius: 8px; font-size: 16px; line-height: 1.6; background-color: #f8f9fa; overflow-y: auto; outline: none; }
-        #editor-body:focus { border-color: #1a73e8; background-color: #ffffff; }
+        @keyframes pulse { from { opacity: 0.4; } to { opacity: 1; } }
         
-        .action-group { display: flex; gap: 12px; }
-        .download-btn { background-color: #34a853; }
+        .toolbar { display: flex; gap: 6px; background-color: var(--bg-element); padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); }
+        .toolbar-btn { background: none; color: var(--text-secondary); padding: 6px 12px; font-size: 14px; border-radius: 4px; width: auto; }
+        .toolbar-btn:hover { background-color: var(--bg-hover); color: var(--accent); }
+
+        #editor-body { width: 100%; flex-grow: 1; height: 50vh; padding: 20px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; line-height: 1.6; background-color: var(--bg-main); color: var(--text-primary); overflow-y: auto; outline: none; }
+        #editor-body:focus { border-color: var(--accent); background-color: var(--bg-surface); }
+        
+        /* ADVANCED FEATURE: Live Metrics Dashboard Panel */
+        .metrics-bar { display: flex; gap: 24px; font-size: 13px; color: var(--text-secondary); background: var(--bg-element); padding: 10px 16px; border-radius: 6px; }
+        .metrics-bar span strong { color: var(--text-primary); }
+
+        .action-group { display: flex; justify-content: flex-end; }
+        .download-btn { background-color: #34a853; color: white; }
         .download-btn:hover { background-color: #2d8e47; }
 
-        #empty-state { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #adb5bd; gap: 8px; }
-        #empty-state svg { width: 64px; height: 64px; fill: #e9ecef; }
+        #empty-state { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--text-muted); gap: 8px; }
+        #empty-state svg { width: 64px; height: 64px; fill: var(--border-color); }
     </style>
 </head>
 <body>
 
-    <!-- AUTHENTICATION WINDOW OVERLAY -->
+    <!-- AUTHENTICATION OVERLAY WINDOW -->
     <div id="auth-overlay">
-        <div class="auth-card" id="auth-card">
+        <div class="auth-card">
             <h2 id="auth-title">Login to DocuFlow</h2>
             <input type="text" id="auth-user" placeholder="Username">
             <input type="password" id="auth-pass" placeholder="Password">
@@ -78,7 +126,10 @@
     <div id="sidebar">
         <div class="sidebar-header">
             <h1>DocuFlow</h1>
-            <span class="logout-link" onclick="logout()">Logout</span>
+            <div class="nav-controls">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Light/Dark Mode">🌓</button>
+                <span class="logout-link" onclick="logout()">Logout</span>
+            </div>
         </div>
         <div class="input-group">
             <input type="text" id="doc-title" placeholder="New document title...">
@@ -94,9 +145,13 @@
         <p>Select a file from the sidebar or make a new one to begin typing.</p>
     </div>
 
-    <!-- ACTIVE RICH TEXT EDITOR -->
+    <!-- ACTIVE WORKSPACE -->
     <div id="editor-container">
-        <h2 id="active-title">Select a document</h2>
+        <div class="editor-header-wrapper">
+            <h2 id="active-title">Select a document</h2>
+            <!-- AUTO-SAVE TRACKING METRIC CONTAINER -->
+            <div id="save-status"><span class="dot saved"></span> All changes saved</div>
+        </div>
         
         <div class="toolbar">
             <button class="toolbar-btn" onclick="formatText('bold')"><b>B</b></button>
@@ -106,10 +161,17 @@
             <button class="toolbar-btn" onclick="formatText('insertUnorderedList')">• Bullet List</button>
         </div>
 
-        <div id="editor-body" contenteditable="true"></div>
+        <!-- Text input executes background debounced triggers -->
+        <div id="editor-body" contenteditable="true" oninput="onEditorContentChange()"></div>
         
+        <!-- ADVANCED FEATURE: Metrics Status Bar Layout -->
+        <div class="metrics-bar">
+            <span>Words: <strong id="metric-words">0</strong></span>
+            <span>Characters: <strong id="metric-chars">0</strong></span>
+            <span>Read Time: <strong id="metric-read-time">0m</strong></span>
+        </div>
+
         <div class="action-group">
-            <button onclick="saveDocument()">Save Content Layout</button>
             <button class="download-btn" onclick="downloadDocument()">📥 Download File</button>
         </div>
     </div>
@@ -117,7 +179,86 @@
     <script>
         let currentDocId = null;
         let isSignUpMode = false;
+        let saveTimeout = null; // Holds the debounce reference handler clock
 
+        // --- ADVANCED FEATURE: CONSTANT VARIABLES THEME ENGINE ROUTER ---
+        function initializeTheme() {
+            const activeTheme = localStorage.getItem('docuflow-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', activeTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const targetTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', targetTheme);
+            localStorage.setItem('docuflow-theme', targetTheme);
+        }
+
+        // --- ADVANCED FEATURE: REALTIME METRICS MONITOR ENGINE ---
+        function updateTextMetrics() {
+            const body = document.getElementById('editor-body');
+            const rawText = body.innerText || "";
+            
+            // Character parsing cleanly matching text variables
+            const characterCount = rawText.replace(/\n/g, "").length;
+            
+            // Clean extraction array pattern matching split text items filtering space buffers
+            const wordsArray = rawText.trim().split(/\s+/).filter(word => word.length > 0);
+            const wordCount = wordsArray.length;
+
+            // Average adult reading velocity metrics calculations (~200 Words per minute)
+            const readingTimeMinutes = Math.ceil(wordCount / 200);
+
+            document.getElementById('metric-chars').textContent = characterCount;
+            document.getElementById('metric-words').textContent = wordCount;
+            document.getElementById('metric-read-time').textContent = `${readingTimeMinutes}m`;
+        }
+
+        // --- ADVANCED FEATURE: ASYNCHRONOUS DEBOUNCED AUTOMATIC REPLICATION ENGINE ---
+        function onEditorContentChange() {
+            updateTextMetrics();
+            updateSaveStatusIndicator('saving', 'Saving changes...');
+
+            // Clear the active timer signature layer loop
+            clearTimeout(saveTimeout);
+
+            // Debounce loop halts execution and waits until user completely pauses typing for 1200ms
+            saveTimeout = setTimeout(() => {
+                executeSilentSave();
+            }, 1200);
+        }
+
+        function updateSaveStatusIndicator(state, message) {
+            const statusBox = document.getElementById('save-status');
+            if (!statusBox) return;
+            
+            if (state === 'saving') {
+                statusBox.innerHTML = `<span class="dot saving"></span> ${message}`;
+            } else if (state === 'saved') {
+                statusBox.innerHTML = `<span class="dot saved"></span> ${message}`;
+            }
+        }
+
+        function executeSilentSave() {
+            if (!currentDocId) return;
+            const contentHTML = document.getElementById('editor-body').innerHTML;
+
+            fetch(`/api/documents/${currentDocId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: contentHTML })
+            })
+            .then(response => response.json())
+            .then(() => {
+                updateSaveStatusIndicator('saved', 'All changes saved');
+            })
+            .catch(err => {
+                console.error("Auto-save sync payload issue:", err);
+                updateSaveStatusIndicator('saved', 'Error syncing adjustments');
+            });
+        }
+
+        // --- STANDARD APP WORKSPACE CORE FUNCTIONS ---
         function toggleAuthMode() {
             isSignUpMode = !isSignUpMode;
             document.getElementById('auth-title').textContent = isSignUpMode ? "Create Account" : "Login to DocuFlow";
@@ -140,12 +281,11 @@
             .then(res => res.json())
             .then(data => {
                 if(data.error) return alert(data.error);
-                
-                alert(data.message || "Welcome back!");
                 if(isSignUpMode) {
-                    toggleAuthMode(); // Switch back to login view after signing up
+                    alert("Account registered safely! Moving to credentials access port layout layer.");
+                    toggleAuthMode();
                 } else {
-                    document.getElementById('auth-overlay').style.display = "none"; // Hide panel login box
+                    document.getElementById('auth-overlay').style.display = "none";
                     loadDocuments();
                 }
             })
@@ -161,12 +301,14 @@
                 document.getElementById('document-list').innerHTML = "";
                 document.getElementById('auth-user').value = "";
                 document.getElementById('auth-pass').value = "";
+                currentDocId = null;
             });
         }
 
         function formatText(command, value = null) {
             document.execCommand(command, false, value);
             document.getElementById('editor-body').focus();
+            onEditorContentChange(); // Trigger metrics and auto-save on formatting changes
         }
 
         function loadDocuments() {
@@ -203,7 +345,7 @@
                         list.appendChild(div);
                     });
                 })
-                .catch(err => console.log("Session verified or user required login."));
+                .catch(err => console.log("Session verification required."));
         }
 
         function createDocument() {
@@ -224,39 +366,27 @@
         }
 
         function openEditor(id, title, content) {
+            // If another document was open, flush any pending save instantly
+            if(currentDocId && currentDocId !== id) { clearTimeout(saveTimeout); executeSilentSave(); }
+
             currentDocId = id;
             document.getElementById('empty-state').style.display = "none";
             document.getElementById('active-title').textContent = title;
             document.getElementById('editor-body').innerHTML = content || "";
             document.getElementById('editor-container').style.display = "flex";
-        }
-
-        function saveDocument() {
-            if (!currentDocId) return;
-            const contentHTML = document.getElementById('editor-body').innerHTML;
-
-            fetch(`/api/documents/${currentDocId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content: contentHTML })
-            })
-            .then(response => response.json())
-            .then(() => {
-                alert("Rich text workspace saved safely!");
-                loadDocuments(); 
-            })
-            .catch(err => console.error(err));
+            
+            updateTextMetrics();
+            updateSaveStatusIndicator('saved', 'All changes saved');
         }
 
         function deleteDocument(id) {
             if (!confirm("Are you sure you want to delete this document?")) return;
 
-            fetch(`/api/documents/${id}`, {
-                method: 'DELETE'
-            })
+            fetch(`/api/documents/${id}`, { method: 'DELETE' })
             .then(response => response.json())
             .then(() => {
                 if (currentDocId === id) {
+                    clearTimeout(saveTimeout);
                     currentDocId = null;
                     document.getElementById('editor-container').style.display = "none";
                     document.getElementById('empty-state').style.display = "flex";
@@ -281,7 +411,8 @@
             document.body.removeChild(link);
         }
 
-        // Initialize checking if a cookie session is already valid on load
+        // Initialize engines
+        initializeTheme();
         loadDocuments();
     </script>
 </body>
